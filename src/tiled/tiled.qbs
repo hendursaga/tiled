@@ -24,7 +24,7 @@ QtGuiApplication {
     cpp.includePaths: {
         var paths = ["."];
 
-        if (project.enableZstd)
+        if (project.staticZstd)
             paths.push("../../zstd/lib");
 
         if (project.sentry)
@@ -595,7 +595,6 @@ QtGuiApplication {
     Properties {
         condition: qbs.targetOS.contains("macos")
         cpp.frameworks: ["Foundation"]
-        cpp.cxxFlags: ["-Wno-unknown-pragmas"]
         bundle.identifierPrefix: "org.mapeditor"
         ib.appIconName: "tiled-icon-mac"
         targetName: "Tiled"

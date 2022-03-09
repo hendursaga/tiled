@@ -7,11 +7,6 @@ DynamicLibrary {
     Depends { name: "cpp" }
     Depends { name: "Qt"; submodules: "gui"; versionAtLeast: "5.12" }
 
-    Properties {
-        condition: !qbs.toolchain.contains("msvc")
-        cpp.dynamicLibraries: base.concat(["z"])
-    }
-
     Probes.PkgConfigProbe {
         id: pkgConfigZstd
         name: "libzstd"
@@ -30,25 +25,34 @@ DynamicLibrary {
             "_USE_MATH_DEFINES",
         ]
 
-        if (project.enableZstd || pkgConfigZstd.found)
+        if (project.staticZstd || pkgConfigZstd.found)
             defs.push("TILED_ZSTD_SUPPORT");
 
         return defs;
     }
+    cpp.dynamicLibraries: {
+        var libs = base;
 
-    Properties {
-        condition: qbs.targetOS.contains("macos")
-        cpp.cxxFlags: ["-Wno-unknown-pragmas"]
+        if (!qbs.toolchain.contains("msvc"))
+            libs.push("z");
+
+        if (!project.staticZstd && pkgConfigZstd.found)
+            libs.concat(pkgConfigZstd.libraries)
+
+        print("libs:", libs);
+
+        return libs;
     }
 
     Properties {
-        condition: !project.enableZstd && pkgConfigZstd.found
-        cpp.cxxFlags: pkgConfigZstd.cflags
-        cpp.linkerFlags: pkgConfigZstd.libs
+        condition: !project.staticZstd && pkgConfigZstd.found
+        cpp.cxxFlags: outer.concat(pkgConfigZstd.cflags)
+        cpp.libraryPaths: outer.concat(pkgConfigZstd.libraryPaths)
+        //cpp.linkerFlags: outer.concat(pkgConfigZstd.libs)
     }
 
     Properties {
-        condition: project.enableZstd
+        condition: project.staticZstd
         cpp.staticLibraries: ["zstd"]
         cpp.libraryPaths: ["../../zstd/lib"]
         cpp.includePaths: ["../../zstd/lib"]

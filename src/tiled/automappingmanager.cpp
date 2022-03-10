@@ -34,6 +34,8 @@
 #include <QFileSystemWatcher>
 #include <QTextStream>
 
+#include "/home/bjorn/durationlogger.h"
+
 using namespace Tiled;
 
 SessionOption<bool> AutomappingManager::automappingWhileDrawing { "automapping.whileDrawing", false };
@@ -107,6 +109,8 @@ void AutomappingManager::autoMapInternal(const QRegion &where,
     const bool automatic = touchedLayer != nullptr;
 
     if (!mLoaded) {
+        LOG_DURATION_OF("Loading rule files");
+
         if (mRulesFile.isEmpty()) {
             mError = tr("No AutoMapping rules provided. Save the map or refer to a rule file in the project properties.");
             emit errorsOccurred(automatic);
@@ -126,6 +130,8 @@ void AutomappingManager::autoMapInternal(const QRegion &where,
         if (!touchedLayer || a->ruleLayerNameUsed(touchedLayer->name()))
             passedAutoMappers.append(a.get());
     }
+
+    LOG_DURATION_OF("Applying rules");
 
     if (!passedAutoMappers.isEmpty()) {
         // use a copy of the region, so each automapper can manipulate it and the
